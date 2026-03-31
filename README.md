@@ -1,36 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GolfGives — Charity Golf Platform
+
+A full-stack subscription platform where golfers track Stableford scores, enter automated monthly prize draws, and contribute to vetted charities — all in one place.
+
+**Live:** [golf-charity-platform-three-livid.vercel.app](https://golf-charity-platform-three-livid.vercel.app)
+
+---
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS v4
+- **Auth & Database:** Supabase
+- **Payments:** Stripe (subscriptions + webhooks)
+- **Deployment:** Vercel
+
+---
+
+## Features
+
+- Subscriber signup, login, and dashboard
+- Stableford score tracking (rolling 5-score average)
+- Tier-based automated monthly prize draws (3, 4, or 5 number match)
+- Charity selection — 10% of every subscription donated automatically
+- Stripe subscription billing (monthly £9.99 / yearly £89.99)
+- Winner proof upload and payout tracking
+- Admin portal with full user, draw, charity, and winner management
+- Stripe webhook handling for subscription lifecycle events
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/your-username/golf-charity-platform.git
+cd golf-charity-platform
+npm install
+```
+
+### 2. Set up environment variables
+
+Create a `.env.local` file in the root:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Stripe
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_MONTHLY_PRICE_ID=price_...
+STRIPE_YEARLY_PRICE_ID=price_...
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### 3. Run locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Stripe Webhooks (Local Testing)
 
-## Learn More
+Use the Stripe CLI to forward events to your local server:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Events handled:
+- `checkout.session.completed`
+- `invoice.payment_succeeded`
+- `invoice.payment_failed`
+- `customer.subscription.deleted`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+app/
+├── (auth)/          # Login, signup, admin-login pages
+├── (admin)/         # Admin dashboard (users, draws, charities, winners)
+├── (dashboard)/     # Subscriber dashboard (scores, draws, charity, winnings)
+├── api/             # API routes (auth, subscriptions, draws, scores, webhooks)
+├── charities/       # Public charities page
+└── page.tsx         # Landing page
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+components/          # Shared UI components
+lib/                 # Supabase clients, Stripe config
+```
+
+---
+
+## Admin Access
+
+Any Supabase user with `admin` in their email is automatically elevated to admin role on first login. Create an admin user via Supabase Dashboard → Authentication → Users.
+
+---
+
+## Deployment (Vercel)
+
+1. Push to GitHub and import the repo in Vercel
+2. Add all environment variables from `.env.local` to Vercel project settings
+3. Set `NEXT_PUBLIC_APP_URL` to your Vercel deployment URL
+4. Add a Stripe webhook endpoint pointing to `https://your-app.vercel.app/api/webhooks/stripe`
+5. Copy the new `whsec_...` signing secret into Vercel env vars and redeploy
+
+---
+
+## License
+
+MIT
