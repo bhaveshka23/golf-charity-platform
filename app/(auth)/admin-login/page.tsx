@@ -26,9 +26,8 @@ export default function AdminLoginPage() {
       return
     }
 
-    // Role check happens on the server in layout, but we can fast-redirect
-    router.push('/admin')
-    router.refresh()
+    // Use replace instead of push to avoid history entry, skip refresh() to reduce latency
+    router.replace('/admin')
   }
 
   return (

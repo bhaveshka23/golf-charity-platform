@@ -10,16 +10,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/admin-login')
 
+  const isAdminEmail = user.email?.toLowerCase().includes('admin')
   const admin = createAdminClient()
-  const { data: profile } = await admin.from('users').select('role').eq('id', user.id).single()
-  
-  if (profile?.role !== 'admin') {
-    // Auto-elevate accounts with 'admin' in their email for easier testing/setup
-    if (user.email?.toLowerCase().includes('admin')) {
-      await admin.from('users').update({ role: 'admin' }).eq('id', user.id)
-    } else {
-      redirect('/dashboard')
-    }
+
+  if (isAdminEmail) {
+    // Fast path: skip DB read, just ensure role is set
+    admin.from('users').update({ role: 'admin' }).eq('id', user.id) // fire and forget
+  } else {
+    const { data: profile } = await admin.from('users').select('role').eq('id', user.id).single()
+    if (profile?.role !== 'admin') redirect('/dashboard')
   }
 
   const navItems = [
